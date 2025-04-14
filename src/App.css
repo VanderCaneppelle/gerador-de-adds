@@ -401,23 +401,71 @@ textarea:focus {
 }
 
 @media (max-width: 768px) {
+  #root {
+    padding: 0.5rem;
+  }
+
+  body {
+    padding: 0;
+  }
+
   .container {
-    padding: 1.5rem;
-    padding-top: 5rem;
-    margin-top: 1rem;
+    padding: 1rem;
+    padding-top: 4rem;
+    margin-top: 0;
+    border-radius: 0;
+    box-shadow: none;
+    min-height: 100vh;
   }
 
   .fixed-buttons {
-    padding: 0.75rem;
+    padding: 0.5rem;
   }
 
   .logout-button,
   .refresh-button {
     font-size: 0.9rem;
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
   }
 
   .refresh-button::before {
     font-size: 1rem;
+  }
+
+  h1 {
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  input,
+  textarea {
+    padding: 0.75rem;
+  }
+
+  .image-preview {
+    margin: 1rem 0;
+  }
+
+  .image-preview img {
+    max-width: 100%;
+    border-radius: 8px;
+  }
+
+  .image-actions {
+    gap: 0.5rem;
+  }
+
+  .download-button,
+  .copy-button,
+  .share-button {
+    padding: 0.75rem 1rem;
+    min-width: auto;
+    flex: 1;
+    font-size: 0.9rem;
   }
 }
