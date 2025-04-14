@@ -9,39 +9,6 @@ export interface MercadoLivreProduct {
     url: string;
 }
 
-const CLIENT_ID = import.meta.env.VITE_ML_CLIENT_ID;
-const CLIENT_SECRET = import.meta.env.VITE_ML_CLIENT_SECRET;
-
-async function getAccessToken(): Promise<string> {
-    try {
-        // Criar form data conforme recomendação do ML
-        const formData = new URLSearchParams();
-        formData.append('grant_type', 'client_credentials');
-        formData.append('client_id', CLIENT_ID || '');
-        formData.append('client_secret', CLIENT_SECRET || '');
-
-        const response = await axios.post(
-            'https://api.mercadolibre.com/oauth/token',
-            formData,
-            {
-                headers: {
-                    'accept': 'application/json',
-                    'content-type': 'application/x-www-form-urlencoded'
-                }
-            }
-        );
-
-        if (!response.data.access_token) {
-            throw new Error('Token não recebido');
-        }
-
-        return response.data.access_token;
-    } catch (error: any) {
-        console.error('Erro ao obter token:', error.response?.data || error);
-        throw new Error('Falha ao obter token de acesso');
-    }
-}
-
 export const extractMercadoLivreInfo = async (url: string): Promise<MercadoLivreProduct> => {
     try {
         // Limpa a URL removendo parâmetros após # e ?
