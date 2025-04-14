@@ -4,13 +4,6 @@ import { extractMercadoLivreInfo } from './services/mercadoLivre'
 import { formatProductMessage, downloadImage, openWhatsApp } from './services/whatsapp'
 import { Login } from './components/Login'
 
-interface MercadoLivreProduct {
-  name: string;
-  normalPrice: string | null;
-  promoPrice: string;
-  imageUrl: string;
-}
-
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [url, setUrl] = useState('')

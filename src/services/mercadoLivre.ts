@@ -1,7 +1,7 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 
-interface MercadoLivreProduct {
+export interface MercadoLivreProduct {
     name: string;
     normalPrice: string | null;
     promoPrice: string;
@@ -71,7 +71,6 @@ export const extractMercadoLivreInfo = async (url: string): Promise<MercadoLivre
 
         // Tentar encontrar o preço riscado (normal)
         let normalPrice = '';
-        const priceSymbol = $('.andes-money-amount__currency-symbol').first().text().trim();
         const priceInteger = $('.andes-money-amount__fraction').first().text().trim();
         const priceCents = $('.andes-money-amount__cents').first().text().trim();
 
