@@ -139,12 +139,15 @@ function App() {
 
   return (
     <div className="container">
-      <button onClick={handleLogout} className="logout-button">
-        Sair
-      </button>
-      <button onClick={handleRefresh} className="refresh-button">
-        Novo Produto
-      </button>
+      <div className="fixed-buttons">
+        <button onClick={handleRefresh} className="refresh-button">
+          Novo Produto
+        </button>
+        <button onClick={handleLogout} className="logout-button">
+          Sair
+        </button>
+      </div>
+
       <h1>Gerador de Anúncio ML</h1>
 
       <div className="form-group">

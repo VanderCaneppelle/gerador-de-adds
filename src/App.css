@@ -48,6 +48,7 @@
   max-width: 800px;
   margin: 0 auto;
   padding: 2.5rem;
+  padding-top: 5rem;
   font-family: 'Segoe UI', Arial, sans-serif;
   background: white;
   border-radius: 15px;
@@ -355,17 +356,68 @@ button:disabled {
 
 textarea {
   width: 100%;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 14px;
+  padding: 1rem;
+  border: 2px solid #e1e5ea;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
   resize: vertical;
-  min-height: 80px;
+  min-height: 100px;
   font-family: inherit;
+}
+
+textarea::placeholder {
+  color: #666;
 }
 
 textarea:focus {
   outline: none;
-  border-color: #4CAF50;
-  box-shadow: 0 0 5px rgba(76, 175, 80, 0.2);
+  border-color: #1e3c72;
+  box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.1);
+}
+
+.fixed-buttons {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  z-index: 1000;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.logout-button,
+.refresh-button {
+  position: static;
+  margin: 0;
+  padding: 0.75rem 1.5rem;
+  width: auto;
+  box-shadow: none;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 1.5rem;
+    padding-top: 5rem;
+    margin-top: 1rem;
+  }
+
+  .fixed-buttons {
+    padding: 0.75rem;
+  }
+
+  .logout-button,
+  .refresh-button {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+  }
+
+  .refresh-button::before {
+    font-size: 1rem;
+  }
 }
