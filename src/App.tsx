@@ -19,6 +19,7 @@ function App() {
   const [imageUrl, setImageUrl] = useState('')
   const [localImageUrl, setLocalImageUrl] = useState('')
   const [customLink, setCustomLink] = useState('')
+  const [fileName, setFileName] = useState('produto.jpg')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -48,6 +49,8 @@ function App() {
       setNormalPrice(info.normalPrice || '')
       setPromoPrice(info.promoPrice)
       setImageUrl(info.imageUrl)
+      // Define um nome padrão baseado no nome do produto
+      setFileName(info.name.toLowerCase().replace(/[^a-z0-9]/g, '_').substring(0, 30) + '.jpg')
       setError(null)
     } catch (err) {
       setError('Erro ao extrair informações. Verifique se a URL é válida.')
@@ -75,6 +78,22 @@ function App() {
     } catch (err) {
       setError('Erro ao enviar mensagem: ' + (err instanceof Error ? err.message : String(err)))
     }
+  }
+
+  const handleCopyMessage = () => {
+    const message = formatProductMessage(
+      productName,
+      normalPrice,
+      promoPrice,
+      customLink || url
+    )
+    navigator.clipboard.writeText(message)
+      .then(() => {
+        alert('Mensagem copiada! Agora você pode colar no WhatsApp junto com a imagem.')
+      })
+      .catch(() => {
+        setError('Erro ao copiar mensagem')
+      })
   }
 
   return (
@@ -155,14 +174,29 @@ function App() {
       {localImageUrl && (
         <div className="image-preview">
           <img src={localImageUrl} alt="Preview do produto" />
+          <div className="form-group image-name-input">
+            <label>Nome do arquivo para download</label>
+            <input
+              type="text"
+              value={fileName}
+              onChange={(e) => setFileName(e.target.value)}
+              placeholder="Nome do arquivo (ex: produto.jpg)"
+            />
+          </div>
           <div className="image-actions">
             <a
               href={localImageUrl}
-              download="produto.jpg"
+              download={fileName}
               className="download-button"
             >
               Baixar Imagem
             </a>
+            <button
+              onClick={handleCopyMessage}
+              className="copy-button"
+            >
+              Copiar Mensagem
+            </button>
           </div>
         </div>
       )}
@@ -172,7 +206,7 @@ function App() {
         disabled={!productName || !promoPrice}
         className="share-button"
       >
-        Compartilhar no WhatsApp
+        Abrir WhatsApp
       </button>
 
       {error && <div className="error">{error}</div>}
