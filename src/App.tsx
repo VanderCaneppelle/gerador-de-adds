@@ -42,12 +42,32 @@ function App() {
   useEffect(() => {
     // Quando a URL da imagem mudar, tenta baixá-la
     if (imageUrl) {
-      downloadImage(imageUrl).then(localUrl => {
-        if (localUrl) {
-          setLocalImageUrl(localUrl);
+      downloadImage(imageUrl).then(blob => {
+        if (blob) {
+          // Revoga a URL anterior se existir
+          if (localImageUrl) {
+            URL.revokeObjectURL(localImageUrl);
+          }
+          // Cria uma nova URL local para o blob
+          const newLocalUrl = URL.createObjectURL(blob);
+          console.log('Nova URL local criada:', newLocalUrl);
+          setLocalImageUrl(newLocalUrl);
+        } else {
+          console.error('Falha ao baixar imagem - blob nulo');
+          setError('Erro ao baixar a imagem do produto');
         }
+      }).catch(error => {
+        console.error('Erro ao processar imagem:', error);
+        setError('Erro ao processar a imagem do produto');
       });
     }
+
+    // Cleanup: revoga a URL quando o componente for desmontado ou a URL mudar
+    return () => {
+      if (localImageUrl) {
+        URL.revokeObjectURL(localImageUrl);
+      }
+    };
   }, [imageUrl]);
 
   const handleUrlSubmit = async () => {
@@ -204,14 +224,21 @@ function App() {
 
       {localImageUrl && (
         <div className="image-preview">
-          <img src={localImageUrl} alt="Preview do produto" />
+          <img
+            src={localImageUrl}
+            alt="Preview do produto"
+            onError={(e) => {
+              console.error('Erro ao carregar imagem');
+              setError('Erro ao exibir a imagem do produto');
+              e.currentTarget.style.display = 'none';
+            }}
+          />
           <div className="form-group image-name-input">
             <label>Nome do arquivo para download</label>
             <input
               type="text"
               value={fileName}
               onChange={(e) => setFileName(e.target.value)}
-              placeholder="Nome do arquivo (ex: produto.jpg)"
             />
           </div>
           <div className="image-actions">

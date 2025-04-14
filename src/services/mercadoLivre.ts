@@ -6,6 +6,7 @@ interface MercadoLivreProduct {
     normalPrice: string | null;
     promoPrice: string;
     imageUrl: string;
+    url: string;
 }
 
 const CLIENT_ID = import.meta.env.VITE_ML_CLIENT_ID;
@@ -41,68 +42,76 @@ async function getAccessToken(): Promise<string> {
     }
 }
 
-export async function extractMercadoLivreInfo(url: string): Promise<MercadoLivreProduct> {
+export const extractMercadoLivreInfo = async (url: string): Promise<MercadoLivreProduct> => {
     try {
-        // Converter a URL para usar o proxy
-        const proxyUrl = url.replace('https://www.mercadolivre.com.br', '/api');
-        console.log('Fazendo requisição para:', proxyUrl);
+        // Limpa a URL removendo parâmetros após # e ?
+        const cleanUrl = url.split(/[#?]/)[0];
 
-        const response = await axios.get(proxyUrl);
-        const $ = cheerio.load(response.data);
-        console.log('HTML carregado com sucesso');
+        // Usa um proxy CORS alternativo
+        const corsProxy = 'https://api.allorigins.win/raw?url=';
+        const response = await fetch(corsProxy + encodeURIComponent(cleanUrl), {
+            headers: {
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'pt-BR,pt;q=0.8,en-US;q=0.5,en;q=0.3'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Erro ao acessar a página: ${response.status}`);
+        }
+
+        const html = await response.text();
+        const $ = cheerio.load(html);
 
         // Extrair o nome do produto
         const name = $('.ui-pdp-title').text().trim();
-        console.log('Nome extraído:', name);
-
-        // Extrair preços
-        let normalPrice = null;
-        let promoPrice = '';
+        if (!name) {
+            throw new Error('Não foi possível encontrar o nome do produto');
+        }
 
         // Tentar encontrar o preço riscado (normal)
-        const strikedPriceElement = $('.andes-money-amount.ui-pdp-price__part.ui-pdp-price__original-value');
-        if (strikedPriceElement.length > 0) {
-            const strikedPrice = strikedPriceElement.find('.andes-money-amount__fraction').text().trim();
-            const strikedCents = strikedPriceElement.find('.andes-money-amount__cents').text().trim();
-            normalPrice = formatPrice(`${strikedPrice},${strikedCents || '00'}`);
-            console.log('Preço normal encontrado:', normalPrice);
+        let normalPrice = '';
+        const priceSymbol = $('.andes-money-amount__currency-symbol').first().text().trim();
+        const priceInteger = $('.andes-money-amount__fraction').first().text().trim();
+        const priceCents = $('.andes-money-amount__cents').first().text().trim();
+
+        // Encontrar o preço promocional
+        const promoPriceElement = $('.ui-pdp-price__second-line .andes-money-amount');
+        let promoPrice = '';
+
+        if (promoPriceElement.length > 0) {
+            const promoInteger = promoPriceElement.find('.andes-money-amount__fraction').first().text().trim();
+            const promoCents = promoPriceElement.find('.andes-money-amount__cents').first().text().trim();
+            promoPrice = formatPrice(`${promoInteger},${promoCents || '00'}`);
+            normalPrice = formatPrice(`${priceInteger},${priceCents || '00'}`);
+        } else {
+            // Se não houver preço promocional, o preço normal é o preço atual
+            normalPrice = formatPrice(`${priceInteger},${priceCents || '00'}`);
+            promoPrice = normalPrice;
         }
 
-        // Extrair o preço atual/promocional
-        const currentPriceElement = $('.ui-pdp-price__second-line .andes-money-amount');
-        const currentPrice = currentPriceElement.find('.andes-money-amount__fraction').first().text().trim();
-        const currentCents = currentPriceElement.find('.andes-money-amount__cents').first().text().trim();
-        promoPrice = formatPrice(`${currentPrice},${currentCents || '00'}`);
-        console.log('Preço promocional encontrado:', promoPrice);
-
-        // Se não encontrou preço riscado, o preço normal é igual ao promocional
-        if (!normalPrice) {
-            normalPrice = promoPrice;
-        }
-
-        // Extrair URL da imagem
-        const imageUrl = $('.ui-pdp-gallery__figure img').first().attr('src') ||
-            $('figure.ui-pdp-gallery__figure img').first().attr('src') ||
+        // Encontrar a URL da imagem principal
+        const imageUrl = $('.ui-pdp-gallery__figure img').first().attr('data-zoom') ||
+            $('.ui-pdp-gallery__figure img').first().attr('src') ||
             $('.ui-pdp-image').first().attr('src') ||
-            '';
+            $('img[data-zoom]').first().attr('src') || '';
 
-        console.log('Informações extraídas:', { name, normalPrice, promoPrice, imageUrl });
-
-        if (!name || !promoPrice) {
-            throw new Error('Não foi possível extrair as informações necessárias');
+        if (!imageUrl) {
+            throw new Error('Não foi possível encontrar a imagem do produto');
         }
 
         return {
             name,
             normalPrice,
             promoPrice,
-            imageUrl
+            imageUrl,
+            url: cleanUrl
         };
-    } catch (error: any) {
+    } catch (error) {
         console.error('Erro ao extrair informações:', error);
-        throw new Error('Não foi possível extrair as informações necessárias');
+        throw new Error('Não foi possível extrair as informações do produto. Verifique se a URL é válida.');
     }
-}
+};
 
 function formatPrice(price: string): string {
     if (!price) return 'R$ 0,00';

@@ -1,8 +1,47 @@
-export const downloadImage = async (imageUrl: string) => {
+export const downloadImage = async (imageUrl: string): Promise<Blob | null> => {
     try {
-        const response = await fetch(imageUrl);
-        const blob = await response.blob();
-        return URL.createObjectURL(blob);
+        // Função auxiliar para verificar se o blob é uma imagem válida
+        const isValidImageBlob = (blob: Blob) => {
+            return blob.type.startsWith('image/');
+        };
+
+        // Função para tentar baixar com diferentes métodos
+        const tryFetch = async (url: string, options = {}) => {
+            const response = await fetch(url, options);
+            if (!response.ok) return null;
+            const blob = await response.blob();
+            return isValidImageBlob(blob) ? blob : null;
+        };
+
+        // Tenta baixar diretamente
+        const directBlob = await tryFetch(imageUrl, {
+            headers: {
+                'Accept': 'image/webp,image/jpeg,image/png,image/*;q=0.8',
+                'Referer': 'https://www.mercadolivre.com.br/'
+            }
+        });
+        if (directBlob) return directBlob;
+
+        // Tenta com o primeiro proxy
+        const corsProxy = 'https://corsproxy.io/?';
+        const proxyBlob = await tryFetch(corsProxy + encodeURIComponent(imageUrl), {
+            headers: {
+                'Accept': 'image/webp,image/jpeg,image/png,image/*;q=0.8',
+                'Referer': 'https://www.mercadolivre.com.br/'
+            }
+        });
+        if (proxyBlob) return proxyBlob;
+
+        // Tenta com o segundo proxy
+        const backupProxy = 'https://api.allorigins.win/raw?url=';
+        const backupBlob = await tryFetch(backupProxy + encodeURIComponent(imageUrl), {
+            headers: {
+                'Accept': 'image/webp,image/jpeg,image/png,image/*;q=0.8'
+            }
+        });
+        if (backupBlob) return backupBlob;
+
+        throw new Error('Não foi possível baixar a imagem com nenhum dos métodos');
     } catch (error) {
         console.error('Erro ao baixar imagem:', error);
         return null;
