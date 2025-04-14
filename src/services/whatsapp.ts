@@ -63,7 +63,8 @@ export const formatProductMessage = (
     normalPrice: string | null,
     promoPrice: string,
     url: string,
-    couponCode?: string
+    couponCode?: string,
+    additionalMessage?: string
 ) => {
     let message = `*${name}*\n\n`;
 
@@ -75,6 +76,10 @@ export const formatProductMessage = (
 
     if (couponCode) {
         message += `CUPOM DE DESCONTO: *${couponCode}*\n\n`;
+    }
+
+    if (additionalMessage) {
+        message += `${additionalMessage}\n\n`;
     }
 
     message += url;

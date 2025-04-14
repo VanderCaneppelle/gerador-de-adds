@@ -15,6 +15,7 @@ function App() {
   const [customLink, setCustomLink] = useState('')
   const [fileName, setFileName] = useState('produto.jpg')
   const [couponCode, setCouponCode] = useState('')
+  const [additionalMessage, setAdditionalMessage] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -95,7 +96,8 @@ function App() {
       normalPrice,
       promoPrice,
       customLink || url,
-      couponCode
+      couponCode,
+      additionalMessage
     )
     navigator.clipboard.writeText(message)
       .then(() => {
@@ -121,6 +123,7 @@ function App() {
     setCustomLink('')
     setFileName('produto.jpg')
     setCouponCode('')
+    setAdditionalMessage('')
     setError(null)
 
     // Foca no campo de URL
@@ -212,7 +215,16 @@ function App() {
           onChange={(e) => setCouponCode(e.target.value)}
           placeholder="Digite o código do cupom"
         />
-        <span className="form-help">Se preenchido, será incluído na mensagem</span>
+      </div>
+
+      <div className="form-group">
+        <label>Mensagem Adicional (opcional)</label>
+        <textarea
+          value={additionalMessage}
+          onChange={(e) => setAdditionalMessage(e.target.value)}
+          placeholder="Ex: Ganhe mais 5% OFF ao utilizar o cupom de desconto"
+          rows={3}
+        />
       </div>
 
       {localImageUrl && (
