@@ -1,26 +1,37 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { extractMercadoLivreInfo } from './services/mercadoLivre'
+import { sendWhatsAppMessage, formatProductMessage, downloadImage } from './services/whatsapp'
 import './App.css'
 
 interface MercadoLivreProduct {
   name: string;
-  normalPrice: string;
+  normalPrice: string | null;
   promoPrice: string;
   imageUrl: string;
 }
 
 function App() {
   const [url, setUrl] = useState('')
+  const [phoneNumber, setPhoneNumber] = useState('')
   const [productName, setProductName] = useState('')
   const [normalPrice, setNormalPrice] = useState('')
   const [promoPrice, setPromoPrice] = useState('')
   const [imageUrl, setImageUrl] = useState('')
+  const [localImageUrl, setLocalImageUrl] = useState('')
   const [customLink, setCustomLink] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [status, setStatus] = useState('')
-  const [debug, setDebug] = useState('')
-  const [productInfo, setProductInfo] = useState<MercadoLivreProduct | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    // Quando a URL da imagem mudar, tenta baixá-la
+    if (imageUrl) {
+      downloadImage(imageUrl).then(localUrl => {
+        if (localUrl) {
+          setLocalImageUrl(localUrl);
+        }
+      });
+    }
+  }, [imageUrl]);
 
   const handleUrlSubmit = async () => {
     if (!url) {
@@ -28,40 +39,42 @@ function App() {
       return
     }
 
-    setIsLoading(true)
-    setError('')
-    setStatus('Processando link...')
-    setDebug('')
+    setLoading(true)
+    setError(null)
 
     try {
-      setStatus('Extraindo informações...')
-      setError('')
       const info = await extractMercadoLivreInfo(url)
-      setProductInfo({
-        name: info.name,
-        normalPrice: info.normalPrice,
-        promoPrice: info.promoPrice,
-        imageUrl: info.imageUrl
-      })
       setProductName(info.name)
-      setNormalPrice(info.normalPrice)
+      setNormalPrice(info.normalPrice || '')
       setPromoPrice(info.promoPrice)
       setImageUrl(info.imageUrl)
-      setStatus('Informações extraídas com sucesso!')
+      setError(null)
     } catch (err) {
       setError('Erro ao extrair informações. Verifique se a URL é válida.')
-      setProductInfo(null)
       console.error(err)
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
   }
 
-  const handleShareWhatsApp = () => {
-    const linkToShare = customLink || url;
-    const message = `*${productName}*\n\n💰 Preço Normal: ${normalPrice}\n🔥 Preço Promocional: ${promoPrice}\n\n${linkToShare}`
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`
-    window.open(whatsappUrl, '_blank')
+  const handleShare = () => {
+    if (!phoneNumber) {
+      setError('Por favor, insira um número de WhatsApp')
+      return
+    }
+
+    try {
+      const message = formatProductMessage(
+        productName,
+        normalPrice,
+        promoPrice,
+        customLink || url
+      )
+      sendWhatsAppMessage(phoneNumber, message)
+      setError(null)
+    } catch (err) {
+      setError('Erro ao enviar mensagem: ' + (err instanceof Error ? err.message : String(err)))
+    }
   }
 
   return (
@@ -81,20 +94,9 @@ function App() {
         </span>
       </div>
 
-      <button onClick={handleUrlSubmit} className="button">
-        Extrair Informações
+      <button onClick={handleUrlSubmit} className="button" disabled={loading}>
+        {loading ? 'Extraindo...' : 'Extrair Informações'}
       </button>
-
-      {status && <div className="status-message">{status}</div>}
-      {error && <div className="error-message">{error}</div>}
-      {debug && <div className="debug-message">{debug}</div>}
-
-      {productInfo && (
-        <div className="product-info">
-          <h2>Informações do Produto</h2>
-          <pre>{JSON.stringify(productInfo, null, 2)}</pre>
-        </div>
-      )}
 
       <div className="form-group">
         <label>Nome do Produto</label>
@@ -139,19 +141,41 @@ function App() {
         </span>
       </div>
 
-      {imageUrl && (
+      <div className="form-group">
+        <label>Número do WhatsApp (com DDD)</label>
+        <input
+          type="tel"
+          value={phoneNumber}
+          onChange={(e) => setPhoneNumber(e.target.value)}
+          placeholder="Ex: 11999999999"
+          required
+        />
+      </div>
+
+      {localImageUrl && (
         <div className="image-preview">
-          <img src={imageUrl} alt="Preview do produto" />
+          <img src={localImageUrl} alt="Preview do produto" />
+          <div className="image-actions">
+            <a
+              href={localImageUrl}
+              download="produto.jpg"
+              className="download-button"
+            >
+              Baixar Imagem
+            </a>
+          </div>
         </div>
       )}
 
       <button
-        onClick={handleShareWhatsApp}
-        disabled={!productName || !normalPrice || !promoPrice}
+        onClick={handleShare}
+        disabled={!productName || !promoPrice}
         className="share-button"
       >
         Compartilhar no WhatsApp
       </button>
+
+      {error && <div className="error">{error}</div>}
     </div>
   )
 }

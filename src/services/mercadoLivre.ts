@@ -3,10 +3,9 @@ import * as cheerio from 'cheerio';
 
 interface MercadoLivreProduct {
     name: string;
-    normalPrice: string;
+    normalPrice: string | null;
     promoPrice: string;
     imageUrl: string;
-    customLink?: string; // Link personalizado para o anúncio
 }
 
 const CLIENT_ID = import.meta.env.VITE_ML_CLIENT_ID;
@@ -42,42 +41,46 @@ async function getAccessToken(): Promise<string> {
     }
 }
 
-export async function extractMercadoLivreInfo(url: string, customLink?: string): Promise<MercadoLivreProduct> {
+export async function extractMercadoLivreInfo(url: string): Promise<MercadoLivreProduct> {
     try {
-        // Converter a URL original para usar o proxy
-        const proxyUrl = url.replace('https://www.mercadolivre.com.br', '/ml-proxy');
-
+        // Converter a URL para usar o proxy
+        const proxyUrl = url.replace('https://www.mercadolivre.com.br', '/api');
         console.log('Fazendo requisição para:', proxyUrl);
 
         const response = await axios.get(proxyUrl);
         const $ = cheerio.load(response.data);
+        console.log('HTML carregado com sucesso');
 
-        // Extrair as informações usando diferentes seletores possíveis
-        const name = $('h1.ui-pdp-title').text().trim();
+        // Extrair o nome do produto
+        const name = $('.ui-pdp-title').text().trim();
+        console.log('Nome extraído:', name);
 
         // Extrair preços
-        let normalPrice = '';
+        let normalPrice = null;
         let promoPrice = '';
 
-        // Procurar pelo preço riscado (preço normal)
-        const strikedPrice = $('.ui-pdp-price__original-value .andes-money-amount__fraction').text().trim();
-        const strikedCents = $('.ui-pdp-price__original-value .andes-money-amount__cents').text().trim();
-
-        // Procurar pelo preço atual (promocional)
-        const currentPrice = $('.ui-pdp-price__second-line .andes-money-amount__fraction').first().text().trim();
-        const currentCents = $('.ui-pdp-price__second-line .andes-money-amount__cents').first().text().trim();
-
-        if (strikedPrice) {
-            // Se tem preço riscado, esse é o preço normal
-            normalPrice = `${strikedPrice},${strikedCents || '00'}`;
-            promoPrice = `${currentPrice},${currentCents || '00'}`;
-        } else {
-            // Se não tem preço riscado, o preço normal é igual ao atual
-            normalPrice = `${currentPrice},${currentCents || '00'}`;
-            promoPrice = normalPrice;
+        // Tentar encontrar o preço riscado (normal)
+        const strikedPriceElement = $('.andes-money-amount.ui-pdp-price__part.ui-pdp-price__original-value');
+        if (strikedPriceElement.length > 0) {
+            const strikedPrice = strikedPriceElement.find('.andes-money-amount__fraction').text().trim();
+            const strikedCents = strikedPriceElement.find('.andes-money-amount__cents').text().trim();
+            normalPrice = formatPrice(`${strikedPrice},${strikedCents || '00'}`);
+            console.log('Preço normal encontrado:', normalPrice);
         }
 
-        // Tentar encontrar a imagem principal
+        // Extrair o preço atual/promocional
+        const currentPriceElement = $('.ui-pdp-price__second-line .andes-money-amount');
+        const currentPrice = currentPriceElement.find('.andes-money-amount__fraction').first().text().trim();
+        const currentCents = currentPriceElement.find('.andes-money-amount__cents').first().text().trim();
+        promoPrice = formatPrice(`${currentPrice},${currentCents || '00'}`);
+        console.log('Preço promocional encontrado:', promoPrice);
+
+        // Se não encontrou preço riscado, o preço normal é igual ao promocional
+        if (!normalPrice) {
+            normalPrice = promoPrice;
+        }
+
+        // Extrair URL da imagem
         const imageUrl = $('.ui-pdp-gallery__figure img').first().attr('src') ||
             $('figure.ui-pdp-gallery__figure img').first().attr('src') ||
             $('.ui-pdp-image').first().attr('src') ||
@@ -85,20 +88,19 @@ export async function extractMercadoLivreInfo(url: string, customLink?: string):
 
         console.log('Informações extraídas:', { name, normalPrice, promoPrice, imageUrl });
 
-        if (!name || !normalPrice) {
+        if (!name || !promoPrice) {
             throw new Error('Não foi possível extrair as informações necessárias');
         }
 
         return {
             name,
-            normalPrice: formatPrice(normalPrice),
-            promoPrice: formatPrice(promoPrice),
-            imageUrl,
-            customLink // Link personalizado para o WhatsApp
+            normalPrice,
+            promoPrice,
+            imageUrl
         };
     } catch (error: any) {
         console.error('Erro ao extrair informações:', error);
-        throw new Error(`Erro ao extrair informações: ${error.message}`);
+        throw new Error('Não foi possível extrair as informações necessárias');
     }
 }
 
@@ -108,5 +110,5 @@ function formatPrice(price: string): string {
     const cleanPrice = price.replace(/[^\d,]/g, '');
     // Converte para número
     const numericPrice = parseFloat(cleanPrice.replace(',', '.'));
-    return `R$ ${numericPrice.toFixed(2)}`;
+    return `R$ ${numericPrice.toFixed(2).replace('.', ',')}`;
 } 
