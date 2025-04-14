@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { extractMercadoLivreInfo } from './services/mercadoLivre'
-import { sendWhatsAppMessage, formatProductMessage, downloadImage } from './services/whatsapp'
 import './App.css'
+import { extractMercadoLivreInfo } from './services/mercadoLivre'
+import { formatProductMessage, downloadImage, openWhatsApp } from './services/whatsapp'
+import { Login } from './components/Login'
 
 interface MercadoLivreProduct {
   name: string;
@@ -11,8 +12,8 @@ interface MercadoLivreProduct {
 }
 
 function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [url, setUrl] = useState('')
-  const [phoneNumber, setPhoneNumber] = useState('')
   const [productName, setProductName] = useState('')
   const [normalPrice, setNormalPrice] = useState('')
   const [promoPrice, setPromoPrice] = useState('')
@@ -20,8 +21,23 @@ function App() {
   const [localImageUrl, setLocalImageUrl] = useState('')
   const [customLink, setCustomLink] = useState('')
   const [fileName, setFileName] = useState('produto.jpg')
+  const [couponCode, setCouponCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const loggedIn = localStorage.getItem('isLoggedIn') === 'true'
+    setIsLoggedIn(loggedIn)
+  }, [])
+
+  const handleLogin = () => {
+    setIsLoggedIn(true)
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('isLoggedIn')
+    setIsLoggedIn(false)
+  }
 
   useEffect(() => {
     // Quando a URL da imagem mudar, tenta baixá-la
@@ -60,44 +76,59 @@ function App() {
     }
   }
 
-  const handleShare = () => {
-    if (!phoneNumber) {
-      setError('Por favor, insira um número de WhatsApp')
-      return
-    }
-
-    try {
-      const message = formatProductMessage(
-        productName,
-        normalPrice,
-        promoPrice,
-        customLink || url
-      )
-      sendWhatsAppMessage(phoneNumber, message)
-      setError(null)
-    } catch (err) {
-      setError('Erro ao enviar mensagem: ' + (err instanceof Error ? err.message : String(err)))
-    }
-  }
-
   const handleCopyMessage = () => {
     const message = formatProductMessage(
       productName,
       normalPrice,
       promoPrice,
-      customLink || url
+      customLink || url,
+      couponCode
     )
     navigator.clipboard.writeText(message)
       .then(() => {
-        alert('Mensagem copiada! Agora você pode colar no WhatsApp junto com a imagem.')
+        alert('Mensagem copiada!\n\nPróximos passos:\n1. Baixe a imagem usando o botão "Baixar Imagem"\n2. Cole a mensagem (Ctrl+V) no WhatsApp\n3. Anexe a imagem que você baixou')
       })
       .catch(() => {
         setError('Erro ao copiar mensagem')
       })
   }
 
+  const handleOpenWhatsApp = () => {
+    openWhatsApp();
+  }
+
+  const handleRefresh = () => {
+    // Limpa todos os campos
+    setUrl('')
+    setProductName('')
+    setNormalPrice('')
+    setPromoPrice('')
+    setImageUrl('')
+    setLocalImageUrl('')
+    setCustomLink('')
+    setFileName('produto.jpg')
+    setCouponCode('')
+    setError(null)
+
+    // Foca no campo de URL
+    const urlInput = document.querySelector('input[type="text"]') as HTMLInputElement;
+    if (urlInput) {
+      urlInput.focus();
+    }
+  }
+
+  if (!isLoggedIn) {
+    return <Login onLogin={handleLogin} />
+  }
+
   return (
     <div className="container">
+      <button onClick={handleLogout} className="logout-button">
+        Sair
+      </button>
+      <button onClick={handleRefresh} className="refresh-button">
+        Novo Produto
+      </button>
       <h1>Gerador de Anúncio ML</h1>
 
       <div className="form-group">
@@ -161,14 +192,14 @@ function App() {
       </div>
 
       <div className="form-group">
-        <label>Número do WhatsApp (com DDD)</label>
+        <label>Cupom de Desconto (opcional)</label>
         <input
-          type="tel"
-          value={phoneNumber}
-          onChange={(e) => setPhoneNumber(e.target.value)}
-          placeholder="Ex: 11999999999"
-          required
+          type="text"
+          value={couponCode}
+          onChange={(e) => setCouponCode(e.target.value)}
+          placeholder="Digite o código do cupom"
         />
+        <span className="form-help">Se preenchido, será incluído na mensagem</span>
       </div>
 
       {localImageUrl && (
@@ -194,20 +225,19 @@ function App() {
             <button
               onClick={handleCopyMessage}
               className="copy-button"
+              disabled={!productName || !promoPrice}
             >
               Copiar Mensagem
+            </button>
+            <button
+              onClick={handleOpenWhatsApp}
+              className="share-button"
+            >
+              Abrir WhatsApp
             </button>
           </div>
         </div>
       )}
-
-      <button
-        onClick={handleShare}
-        disabled={!productName || !promoPrice}
-        className="share-button"
-      >
-        Abrir WhatsApp
-      </button>
 
       {error && <div className="error">{error}</div>}
     </div>

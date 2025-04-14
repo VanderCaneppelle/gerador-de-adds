@@ -1,14 +1,3 @@
-export const sendWhatsAppMessage = (phone: string, message: string) => {
-    // Remove caracteres não numéricos do telefone
-    const cleanPhone = phone.replace(/\D/g, '');
-
-    // Criar o link do WhatsApp
-    const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
-
-    // Abrir em uma nova janela
-    window.open(whatsappUrl, '_blank');
-};
-
 export const downloadImage = async (imageUrl: string) => {
     try {
         const response = await fetch(imageUrl);
@@ -20,11 +9,22 @@ export const downloadImage = async (imageUrl: string) => {
     }
 };
 
+export const openWhatsApp = () => {
+    try {
+        // Tenta abrir o WhatsApp desktop/mobile usando o protocolo whatsapp://
+        window.location.href = 'whatsapp://send';
+    } catch (error) {
+        // Fallback para WhatsApp Web se o app não estiver instalado
+        window.open('https://web.whatsapp.com', '_blank');
+    }
+};
+
 export const formatProductMessage = (
     name: string,
     normalPrice: string | null,
     promoPrice: string,
-    url: string
+    url: string,
+    couponCode?: string
 ) => {
     let message = `*${name}*\n\n`;
 
@@ -33,6 +33,11 @@ export const formatProductMessage = (
     }
 
     message += `Por: *${promoPrice}*\n\n`;
+
+    if (couponCode) {
+        message += `CUPOM DE DESCONTO: *${couponCode}*\n\n`;
+    }
+
     message += url;
 
     return message;
