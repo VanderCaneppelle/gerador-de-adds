@@ -11,22 +11,51 @@ export interface MercadoLivreProduct {
 export const extractMercadoLivreInfo = async (url: string): Promise<MercadoLivreProduct> => {
     try {
         // Limpa a URL removendo parâmetros após # e ?
-        const cleanUrl = url.split(/[#?]/)[0];
+        const cleanUrl = url.split(/[#?]/)[0].trim();
 
-        // Usa um proxy CORS alternativo
-        const corsProxy = 'https://api.allorigins.win/raw?url=';
-        const response = await fetch(corsProxy + encodeURIComponent(cleanUrl), {
-            headers: {
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                'Accept-Language': 'pt-BR,pt;q=0.8,en-US;q=0.5,en;q=0.3'
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`Erro ao acessar a página: ${response.status}`);
+        // Verifica se é uma URL válida do Mercado Livre
+        if (!cleanUrl.includes('mercadolivre.com.br') && !cleanUrl.includes('mercadolibre.com')) {
+            throw new Error('URL inválida. Por favor, insira uma URL do Mercado Livre.');
         }
 
-        const html = await response.text();
+        // Tenta diferentes proxies CORS em ordem
+        const proxies = [
+            'https://api.allorigins.win/raw?url=',
+            'https://corsproxy.io/?',
+            'https://cors-anywhere.herokuapp.com/'
+        ];
+
+        let html = '';
+        let error = null;
+
+        // Tenta cada proxy até conseguir
+        for (const proxy of proxies) {
+            try {
+                const response = await fetch(proxy + encodeURIComponent(cleanUrl), {
+                    headers: {
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                        'Accept-Language': 'pt-BR,pt;q=0.8,en-US;q=0.5,en;q=0.3',
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                html = await response.text();
+                if (html) break; // Se conseguiu o HTML, sai do loop
+            } catch (e) {
+                error = e;
+                console.log(`Erro com proxy ${proxy}:`, e);
+                continue; // Tenta o próximo proxy
+            }
+        }
+
+        if (!html) {
+            throw error || new Error('Não foi possível acessar a página do produto');
+        }
+
         const $ = cheerio.load(html);
 
         // Extrair o nome do produto
