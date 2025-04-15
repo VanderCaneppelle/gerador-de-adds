@@ -10,36 +10,65 @@ export interface MercadoLivreProduct {
 
 export const extractMercadoLivreInfo = async (url: string): Promise<MercadoLivreProduct> => {
     try {
-        // Limpa a URL e extrai o ID do produto
+        // Limpa a URL removendo parâmetros após # e ?
         const cleanUrl = url.split(/[#?]/)[0].trim();
-        const productId = extractProductId(cleanUrl);
 
-        if (!productId) {
-            throw new Error('URL inválida. Por favor, insira uma URL válida do Mercado Livre.');
+        // Verifica se é uma URL válida do Mercado Livre
+        if (!cleanUrl.includes('mercadolivre.com.br') && !cleanUrl.includes('mercadolibre.com')) {
+            throw new Error('URL inválida. Por favor, insira uma URL do Mercado Livre.');
         }
 
-        // Usa a API pública do Mercado Livre
-        const apiUrl = `https://api.mercadolibre.com/items/${productId}`;
-        const response = await fetch(apiUrl);
+        // Usa um proxy CORS confiável
+        const corsProxy = 'https://api.allorigins.win/raw?url=';
+        const response = await fetch(corsProxy + encodeURIComponent(cleanUrl), {
+            headers: {
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'pt-BR,pt;q=0.8,en-US;q=0.5,en;q=0.3',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+        });
 
         if (!response.ok) {
-            throw new Error(`Erro ao acessar API do Mercado Livre: ${response.status}`);
+            throw new Error(`Erro ao acessar a página: ${response.status}`);
         }
 
-        const data = await response.json();
+        const html = await response.text();
+        const $ = cheerio.load(html);
 
-        // Extrai as informações necessárias
-        const name = data.title;
-        const originalPrice = data.original_price || data.price;
-        const currentPrice = data.price;
+        // Extrair o nome do produto
+        const name = $('.ui-pdp-title').text().trim();
+        if (!name) {
+            throw new Error('Não foi possível encontrar o nome do produto');
+        }
 
-        // Pega a maior imagem disponível
-        const imageUrl = data.pictures?.[0]?.secure_url || data.thumbnail;
+        // Tentar encontrar o preço riscado (normal)
+        let normalPrice = null;
+        const priceContainer = $('.ui-pdp-price__original-value');
+        if (priceContainer.length > 0) {
+            const priceText = priceContainer.text().trim();
+            normalPrice = formatPrice(priceText);
+        }
+
+        // Encontrar o preço atual/promocional
+        const currentPriceContainer = $('.andes-money-amount__fraction').first();
+        const currentPriceCents = $('.andes-money-amount__cents').first().text().trim();
+        const currentPrice = currentPriceContainer.text().trim();
+        const promoPrice = formatPrice(`${currentPrice},${currentPriceCents || '00'}`);
+
+        // Encontrar a URL da imagem principal (tenta vários seletores)
+        const imageUrl = $('.ui-pdp-gallery__figure img').first().attr('data-zoom') ||
+            $('.ui-pdp-gallery__figure img').first().attr('src') ||
+            $('.ui-pdp-image').first().attr('src') ||
+            $('img[data-zoom]').first().attr('src');
+
+        if (!imageUrl) {
+            throw new Error('Não foi possível encontrar a imagem do produto');
+        }
 
         return {
             name,
-            normalPrice: originalPrice ? formatPrice(originalPrice.toString()) : null,
-            promoPrice: formatPrice(currentPrice.toString()),
+            normalPrice,
+            promoPrice,
             imageUrl,
             url: cleanUrl
         };
@@ -49,33 +78,19 @@ export const extractMercadoLivreInfo = async (url: string): Promise<MercadoLivre
     }
 };
 
-function extractProductId(url: string): string | null {
-    // Padrões possíveis de URLs do Mercado Livre
-    const patterns = [
-        /mercadolivre\.com\.br\/MLB-(\d+)/,
-        /MLB-(\d+)/,
-        /mercadolibre\.com\/MLB-(\d+)/
-    ];
-
-    for (const pattern of patterns) {
-        const match = url.match(pattern);
-        if (match && match[1]) {
-            return `MLB-${match[1]}`;
-        }
-    }
-
-    return null;
-}
-
 function formatPrice(price: string): string {
     if (!price) return 'R$ 0,00';
 
-    // Converte para número
-    const numericPrice = parseFloat(price);
+    // Remove tudo que não for número ou vírgula
+    const cleanPrice = price.replace(/[^\d,]/g, '');
 
-    // Formata o preço no padrão brasileiro
-    return new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL'
-    }).format(numericPrice);
+    // Se não houver vírgula, assume que são centavos
+    if (!cleanPrice.includes(',')) {
+        const numericPrice = parseInt(cleanPrice, 10) / 100;
+        return `R$ ${numericPrice.toFixed(2).replace('.', ',')}`;
+    }
+
+    // Converte para número
+    const numericPrice = parseFloat(cleanPrice.replace(',', '.'));
+    return `R$ ${numericPrice.toFixed(2).replace('.', ',')}`;
 } 
