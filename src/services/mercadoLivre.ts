@@ -43,19 +43,25 @@ export const extractMercadoLivreInfo = async (url: string): Promise<MercadoLivre
 
         // Tentar encontrar o preço riscado (normal)
         let normalPrice = null;
-        const priceContainer = $('.ui-pdp-price__original-value');
-        if (priceContainer.length > 0) {
-            const priceText = priceContainer.text().trim();
-            normalPrice = formatPrice(priceText);
+        const normalPriceContainer = $('.andes-money-amount--previous');
+        if (normalPriceContainer.length > 0) {
+            const fraction = normalPriceContainer.find('.andes-money-amount__fraction').text().trim();
+            const cents = normalPriceContainer.find('.andes-money-amount__cents').text().trim();
+            normalPrice = formatPrice(`${fraction},${cents || '00'}`);
         }
 
         // Encontrar o preço atual/promocional
-        const currentPriceContainer = $('.andes-money-amount__fraction').first();
-        const currentPriceCents = $('.andes-money-amount__cents').first().text().trim();
-        const currentPrice = currentPriceContainer.text().trim();
-        const promoPrice = formatPrice(`${currentPrice},${currentPriceCents || '00'}`);
+        let promoPrice;
+        const promoPriceContainer = $('.ui-pdp-price__second-line .andes-money-amount');
+        if (promoPriceContainer.length > 0) {
+            const fraction = promoPriceContainer.find('.andes-money-amount__fraction').first().text().trim();
+            const cents = promoPriceContainer.find('.andes-money-amount__cents').first().text().trim();
+            promoPrice = formatPrice(`${fraction},${cents || '00'}`);
+        } else {
+            throw new Error('Não foi possível encontrar o preço do produto');
+        }
 
-        // Encontrar a URL da imagem principal (tenta vários seletores)
+        // Encontrar a URL da imagem principal
         const imageUrl = $('.ui-pdp-gallery__figure img').first().attr('data-zoom') ||
             $('.ui-pdp-gallery__figure img').first().attr('src') ||
             $('.ui-pdp-image').first().attr('src') ||

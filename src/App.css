@@ -1,7 +1,7 @@
 #root {
-  max-width: 1280px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 0.5rem;
   text-align: center;
 }
 
@@ -47,21 +47,108 @@
 .container {
   max-width: 800px;
   margin: 0 auto;
-  padding: 2.5rem;
+  padding: 2rem;
   padding-top: 5rem;
   font-family: 'Segoe UI', Arial, sans-serif;
-  background: white;
-  border-radius: 15px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 245, 255, 0.95) 100%);
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.header h1 {
+  margin: 0;
+  color: #1e3c72;
+  font-size: 2rem;
+}
+
+.store-selector {
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.store-selector label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #1e3c72;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.store-selector select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #e1e5ea;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  background: white;
   color: #333;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.form-group .input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 1rem;
+  border: 2px solid #e1e5ea;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+}
+
+.button {
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: 1px;
+  margin: 1.5rem 0;
+}
+
+.button:hover {
+  background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(30, 60, 114, 0.2);
+}
+
+.button:disabled {
+  background: #cbd5e0;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 body {
   background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
   min-height: 100vh;
   margin: 0;
-  padding: 20px;
+  padding: 10px;
   color: #333;
 }
 
@@ -72,10 +159,6 @@ h1 {
   font-size: 2.2rem;
   font-weight: 600;
   letter-spacing: 1px;
-}
-
-.form-group {
-  margin-bottom: 1.5rem;
 }
 
 label {
@@ -107,45 +190,6 @@ input:focus {
   box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.1);
 }
 
-button {
-  width: 100%;
-  padding: 1rem;
-  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 1.1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  letter-spacing: 1px;
-  margin: 1.5rem 0;
-}
-
-button:hover {
-  background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(30, 60, 114, 0.2);
-}
-
-button:active {
-  transform: translateY(0);
-}
-
-button:disabled {
-  background: #cbd5e0;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-.form-help {
-  display: block;
-  margin-top: 0.5rem;
-  font-size: 0.875rem;
-  color: #666;
-}
-
 .error {
   color: #dc3545;
   background: rgba(220, 53, 69, 0.1);
@@ -156,13 +200,14 @@ button:disabled {
 }
 
 .image-preview {
-  margin: 2rem 0;
+  margin: 2rem auto;
   text-align: center;
+  max-width: 1200px;
 }
 
 .image-preview img {
-  max-width: 300px;
-  max-height: 300px;
+  max-width: 600px;
+  max-height: 600px;
   border-radius: 12px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease;
@@ -175,9 +220,12 @@ button:disabled {
 .image-actions {
   margin-top: 1.5rem;
   display: flex;
-  gap: 1rem;
+  gap: 2rem;
   justify-content: center;
   flex-wrap: wrap;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .download-button,
@@ -186,7 +234,7 @@ button:disabled {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem 1.5rem;
+  padding: 1rem 2rem;
   color: white;
   text-decoration: none;
   border-radius: 8px;
@@ -195,7 +243,7 @@ button:disabled {
   transition: all 0.3s ease;
   border: none;
   cursor: pointer;
-  min-width: 150px;
+  min-width: 200px;
   margin: 0;
 }
 
@@ -266,7 +314,7 @@ button:disabled {
 }
 
 .image-name-input {
-  max-width: 300px;
+  max-width: 600px;
   margin: 1.5rem auto;
 }
 
@@ -443,34 +491,37 @@ textarea:focus {
     margin-bottom: 1.5rem;
   }
 
-  .form-group {
-    margin-bottom: 1rem;
-  }
-
-  input,
-  textarea {
-    padding: 0.75rem;
-  }
-
-  .image-preview {
-    margin: 1rem 0;
+  .form-group,
+  .store-selector,
+  .button,
+  .image-preview,
+  .image-actions {
+    max-width: 100%;
   }
 
   .image-preview img {
     max-width: 100%;
-    border-radius: 8px;
-  }
-
-  .image-actions {
-    gap: 0.5rem;
+    max-height: 400px;
   }
 
   .download-button,
   .copy-button,
   .share-button {
-    padding: 0.75rem 1rem;
     min-width: auto;
-    flex: 1;
-    font-size: 0.9rem;
+    padding: 0.75rem 1rem;
   }
+}
+
+.form-group label[for="customLink"]::after {
+  content: ' *';
+  color: #e74c3c;
+}
+
+.form-group input:required {
+  border-left: 3px solid #e74c3c;
+}
+
+.form-group input:required:focus {
+  border-color: #e74c3c;
+  box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
 }
