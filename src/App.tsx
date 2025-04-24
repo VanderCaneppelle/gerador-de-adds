@@ -346,9 +346,9 @@ function App() {
           )}
 
           {error && <div className="error">{error}</div>}
-        </div>
+      </div>
       )}
-    </div>
+      </div>
   )
 }
 
