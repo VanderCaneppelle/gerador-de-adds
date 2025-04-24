@@ -20,7 +20,6 @@ export async function extractMercadoLivreInfo(url: string): Promise<MercadoLivre
         ]
 
         let html = ''
-        let proxyError = null
 
         // Tenta cada proxy até um funcionar
         for (const proxyUrl of proxyUrls) {
@@ -39,7 +38,6 @@ export async function extractMercadoLivreInfo(url: string): Promise<MercadoLivre
                     }
                 }
             } catch (err) {
-                proxyError = err
                 console.log('Erro no proxy:', proxyUrl, err)
                 continue
             }

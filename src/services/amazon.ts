@@ -7,23 +7,6 @@ interface AmazonProduct {
     imageUrl: string
 }
 
-function formatPrice(price: string): string {
-    if (!price) return 'R$ 0,00';
-
-    // Remove tudo que não for número ou vírgula
-    const cleanPrice = price.replace(/[^\d,]/g, '');
-
-    // Se não houver vírgula, assume que são centavos
-    if (!cleanPrice.includes(',')) {
-        const numericPrice = parseInt(cleanPrice, 10) / 100;
-        return `R$ ${numericPrice.toFixed(2).replace('.', ',')}`;
-    }
-
-    // Converte para número
-    const numericPrice = parseFloat(cleanPrice.replace(',', '.'));
-    return `R$ ${numericPrice.toFixed(2).replace('.', ',')}`;
-}
-
 function formatPriceFromParts(whole: string, fraction: string): string {
     const cleanWhole = whole.replace(/[^\d]/g, '').trim()
     const cleanFraction = fraction.replace(/[^\d]/g, '').trim()
@@ -46,7 +29,6 @@ export async function extractAmazonInfo(productCode: string): Promise<AmazonProd
         ]
 
         let html = ''
-        let proxyError = null
 
         // Tenta cada proxy até um funcionar
         for (const proxyUrl of proxyUrls) {
@@ -67,7 +49,6 @@ export async function extractAmazonInfo(productCode: string): Promise<AmazonProd
                     }
                 }
             } catch (err) {
-                proxyError = err
                 console.log('Erro no proxy:', proxyUrl, err)
                 continue
             }
