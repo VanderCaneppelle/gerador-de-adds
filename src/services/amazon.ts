@@ -1,5 +1,3 @@
-import * as cheerio from 'cheerio'
-
 interface AmazonProduct {
     name: string
     normalPrice: string
