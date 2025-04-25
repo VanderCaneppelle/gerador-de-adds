@@ -96,7 +96,7 @@ export async function extractMercadoLivreInfo(url: string): Promise<MercadoLivre
         // Imagem do produto
         const imageUrl = $('.ui-pdp-gallery__figure img').first().attr('src')
         if (!imageUrl) {
-            throw new Error('Não foi possível encontrar a imagem do produto')
+            throw new Error('Não foi possível encontrar a imagem do produto!')
         }
         console.log('URL da imagem encontrada:', imageUrl)
 
