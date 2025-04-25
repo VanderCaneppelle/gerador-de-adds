@@ -134,7 +134,7 @@ function App() {
         alert('Mensagem copiada!\n\nPróximos passos:\n1. Baixe a imagem usando o botão "Baixar Imagem"\n2. Cole a mensagem (Ctrl+V) no WhatsApp\n3. Anexe a imagem que você baixou')
       })
       .catch(() => {
-        setError('Erro ao copiar mensagem')
+        setError('Erro ao copiar mensagemm')
       })
   }
 
@@ -346,9 +346,9 @@ function App() {
           )}
 
           {error && <div className="error">{error}</div>}
-      </div>
+        </div>
       )}
-      </div>
+    </div>
   )
 }
 
