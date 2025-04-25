@@ -20,8 +20,8 @@ export async function extractAmazonInfo(code: string): Promise<AmazonProduct> {
         // Monta a URL da Amazon
         const amazonUrl = `https://www.amazon.com.br/dp/${code}`
 
-        // Monta a URL do ScraperAPI com output_format=json e autoparse=true
-        const scraperUrl = `http://api.scraperapi.com/?api_key=${SCRAPER_API_KEY}&url=${encodeURIComponent(amazonUrl)}&output_format=json&autoparse=true`
+        // Monta a URL do ScraperAPI com HTTPS
+        const scraperUrl = `https://api.scraperapi.com/?api_key=${SCRAPER_API_KEY}&url=${encodeURIComponent(amazonUrl)}&output_format=json&autoparse=true`
         console.log('Acessando URL via ScraperAPI:', amazonUrl)
 
         const response = await fetch(scraperUrl)
