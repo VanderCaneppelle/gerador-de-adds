@@ -113,6 +113,50 @@ function App() {
     }
   }
 
+  const handleCopyImage = async () => {
+    try {
+      // Primeiro, vamos criar um canvas para manipular a imagem
+      const img = new Image();
+      img.crossOrigin = 'anonymous';  // Permite carregar imagens de diferentes origens
+
+      // Criamos uma promessa para carregar a imagem
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = localImageUrl;
+      });
+
+      // Criamos um canvas com as dimensões da imagem
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+
+      // Desenhamos a imagem no canvas
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        throw new Error('Não foi possível criar o contexto do canvas');
+      }
+      ctx.drawImage(img, 0, 0);
+
+      // Convertemos o canvas para blob
+      const blob = await new Promise<Blob>((resolve) => {
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+        }, 'image/png');
+      });
+
+      // Tentamos copiar para a área de transferência
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          'image/png': blob
+        })
+      ]);
+    } catch (error) {
+      console.error('Erro ao copiar imagem:', error);
+      setError('Erro ao copiar a imagem. Tente baixar a imagem e copiar manualmente.');
+    }
+  };
+
   const handleCopyMessage = () => {
     if (!customLink) {
       setError('Por favor, insira um link personalizado')
@@ -328,6 +372,12 @@ function App() {
                 >
                   Baixar Imagem
                 </a>
+                <button
+                  onClick={handleCopyImage}
+                  className="copy-image-button"
+                >
+                  Copiar Imagem
+                </button>
                 <button
                   onClick={handleCopyMessage}
                   className="copy-button"
