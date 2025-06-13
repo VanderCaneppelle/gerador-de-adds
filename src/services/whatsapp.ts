@@ -72,7 +72,7 @@ export const formatProductMessage = (
         message += `De: ~${normalPrice}~\n`;
     }
 
-    message += `Por: *${promoPrice}*\n\n`;
+    message += `Por: *${promoPrice}* 🔥🔥\n\n`;
 
     if (couponCode) {
         message += `CUPOM DE DESCONTO: *${couponCode}*\n\n`;
