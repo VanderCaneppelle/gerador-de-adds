@@ -100,6 +100,12 @@ function App() {
       setImageUrl(info.imageUrl)
       // Define um nome padrão baseado no nome do produto
       setFileName(info.name.toLowerCase().replace(/[^a-z0-9]/g, '_').substring(0, 30) + '.jpg')
+      // Se vier desconto, preenche a mensagem adicional
+      if (selectedStore === 'mercadolivre' && (info as any).discountPercent) {
+        setAdditionalMessage(`*Aproveite ${(info as any).discountPercent}* 💸`)
+      } else {
+        setAdditionalMessage('')
+      }
       setError(null)
     } catch (err) {
       if (err instanceof Error) {

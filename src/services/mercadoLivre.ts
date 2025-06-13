@@ -6,6 +6,7 @@ export interface MercadoLivreProduct {
     promoPrice: string;
     imageUrl: string;
     url: string;
+    discountPercent?: string;
 }
 
 export async function extractMercadoLivreInfo(url: string): Promise<MercadoLivreProduct> {
@@ -100,12 +101,21 @@ export async function extractMercadoLivreInfo(url: string): Promise<MercadoLivre
         }
         console.log('URL da imagem encontrada:', imageUrl)
 
+        // Percentual de desconto
+        let discountPercent = '';
+        const discountElement = $('.andes-money-amount__discount').first();
+        if (discountElement.length > 0) {
+            discountPercent = discountElement.text().trim();
+            console.log('Percentual de desconto encontrado:', discountPercent);
+        }
+
         return {
             name,
             normalPrice,
             promoPrice,
             imageUrl,
-            url: url
+            url: url,
+            discountPercent
         }
 
     } catch (error) {
