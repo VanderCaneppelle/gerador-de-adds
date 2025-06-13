@@ -230,7 +230,8 @@ input:focus {
 
 .download-button,
 .copy-button,
-.share-button {
+.share-button,
+.copy-image-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -282,6 +283,16 @@ input:focus {
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
+}
+
+.copy-image-button {
+  background: linear-gradient(135deg, #f39c12 0%, #d35400 100%);
+}
+
+.copy-image-button:hover {
+  background: linear-gradient(135deg, #d35400 0%, #e67e22 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(243, 156, 18, 0.2);
 }
 
 .logout-button {
