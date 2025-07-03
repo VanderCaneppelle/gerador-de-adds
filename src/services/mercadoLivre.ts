@@ -15,6 +15,7 @@ export async function extractMercadoLivreInfo(url: string): Promise<MercadoLivre
 
         // Tenta diferentes serviços de proxy em ordem
         const proxyUrls = [
+            `http://localhost:4000/proxy?url=${encodeURIComponent(url)}`,
             `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
             `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
             `https://cors-anywhere.herokuapp.com/${url}`
