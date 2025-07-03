@@ -11,7 +11,7 @@ export interface MercadoLivreProduct {
 
 export async function extractMercadoLivreInfo(url: string): Promise<MercadoLivreProduct> {
     try {
-        console.log('Tentando acessar URL:', url)
+        console.log('Tentando acessar URL com proxy:', url)
 
         const proxyBase = import.meta.env.VITE_PROXY_URL || 'http://localhost:4000/proxy';
         const proxyUrls = [
