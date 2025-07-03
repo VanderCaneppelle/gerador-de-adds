@@ -13,7 +13,7 @@ export async function extractMercadoLivreInfo(url: string): Promise<MercadoLivre
     try {
         console.log('Tentando acessar URL:', url)
 
-        const proxyBase = process.env.REACT_APP_PROXY_URL || 'http://localhost:4000/proxy';
+        const proxyBase = import.meta.env.VITE_PROXY_URL || 'http://localhost:4000/proxy';
         const proxyUrls = [
             `${proxyBase}?url=${encodeURIComponent(url)}`,
             `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
